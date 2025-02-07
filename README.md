@@ -8,8 +8,4 @@ This project is a user management application built with Express for the backend
 - **Database (SQLite)**: Stores user data.
 - **Testing (Postman)**: Used for API testing and ensuring proper functionality.
 
-## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
