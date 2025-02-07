@@ -145,18 +145,7 @@ Content-Type: application/json
 }
 ```
 
-## Folder Structure
-```
-user-management-system/
-│-- src/
-│   │-- components/
-│   │   ├── UserManagement.js
-│   │-- api/
-│   │   ├── userApi.js
-│-- public/
-│-- package.json
-│-- README.md
-```
+
 
 
 
