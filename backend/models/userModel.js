@@ -1,87 +1,92 @@
 const db = require("../config/db");
 
+// Create Users Table
 const createUserTable = () => {
-  db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        isAdmin INTEGER DEFAULT 0  -- Add isAdmin column with a default value of 0 (regular user)
-      )
-    `);
+  const sql = `
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      isAdmin TINYINT DEFAULT 0
+    )
+  `;
+  db.query(sql, (err) => {
+    if (err) console.error("Error creating users table:", err.message);
+    else console.log("Users table ensured.");
+  });
 };
 
-// Create user with optional isAdmin flag
+// Create User
 const createUser = (name, email, password, isAdmin = 0) => {
   return new Promise((resolve, reject) => {
-    db.run(
+    db.query(
       "INSERT INTO users (name, email, password, isAdmin) VALUES (?, ?, ?, ?)",
       [name, email, password, isAdmin],
-      function (err) {
+      (err, result) => {
         if (err) reject(err);
-        else resolve(this.lastID);
+        else resolve(result.insertId);
       }
     );
   });
 };
 
-// Get all regular users (non-admin)
+// Get All Non-Admin Users
 const getUsers = () => {
   return new Promise((resolve, reject) => {
-    db.all(
-      "SELECT * FROM users WHERE isAdmin = 0", // Exclude admin users
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      }
-    );
+    db.query("SELECT * FROM users WHERE isAdmin = 0", (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
   });
 };
 
-// Get user by ID (handles both admin and regular users)
+// Get User by ID
 const getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
+    db.query("SELECT * FROM users WHERE id = ?", [id], (err, results) => {
       if (err) reject(err);
-      else resolve(row);
+      else resolve(results[0]);
     });
   });
 };
 
-// Update user information (handles both admin and regular users)
+// Update User
 const updateUser = (id, { name, email, password }) => {
   return new Promise((resolve, reject) => {
-    db.run(
+    db.query(
       "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?",
       [name, email, password, id],
-      function (err) {
+      (err, result) => {
         if (err) reject(err);
-        else resolve(this.changes > 0 ? { id, name, email, password } : null);
+        else
+          resolve(
+            result.affectedRows > 0 ? { id, name, email, password } : null
+          );
       }
     );
   });
 };
 
-// Delete user (admins only can delete users)
+// Delete User
 const deleteUser = (id) => {
   return new Promise((resolve, reject) => {
-    db.run("DELETE FROM users WHERE id = ?", [id], function (err) {
+    db.query("DELETE FROM users WHERE id = ?", [id], (err, result) => {
       if (err) reject(err);
-      else resolve(this.changes > 0);
+      else resolve(result.affectedRows > 0);
     });
   });
 };
 
-// Authenticate user (login) and check for admin status
+// Authenticate User
 const authenticateUser = (email, password) => {
   return new Promise((resolve, reject) => {
-    db.get(
+    db.query(
       "SELECT * FROM users WHERE email = ? AND password = ?",
       [email, password],
-      (err, row) => {
+      (err, results) => {
         if (err) reject(err);
-        else resolve(row); // row will now include isAdmin
+        else resolve(results[0]);
       }
     );
   });
