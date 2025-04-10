@@ -1,10 +1,8 @@
-const chai = require("chai");
-const chaiHttp = require("chai-http");
-const app = require("../server");
+const request = require("supertest");
+const app = require("../index");
 const db = require("../config/db");
 
-chai.use(chaiHttp);
-const expect = chai.expect;
+const { expect } = require("chai");
 
 describe("User API", () => {
   before((done) => {
@@ -21,18 +19,18 @@ describe("User API", () => {
         email: "test@example.com",
       };
 
-      chai
-        .request(app)
+      request(app)
         .post("/api/users")
         .send(user)
-        .end((err, res) => {
-          expect(res).to.have.status(201);
+        .then((res) => {
+          expect(res.status).to.equal(201);
           expect(res.body).to.be.an("object");
           expect(res.body).to.have.property("id");
           expect(res.body.name).to.equal(user.name);
           expect(res.body.email).to.equal(user.email);
           done();
-        });
+        })
+        .catch((err) => done(err));
     });
 
     it("should return 400 if name or email is missing", (done) => {
@@ -40,29 +38,29 @@ describe("User API", () => {
         name: "Incomplete User",
       };
 
-      chai
-        .request(app)
+      request(app)
         .post("/api/users")
         .send(user)
-        .end((err, res) => {
-          expect(res).to.have.status(400);
+        .then((res) => {
+          expect(res.status).to.equal(400);
           expect(res.body).to.have.property("error");
           done();
-        });
+        })
+        .catch((err) => done(err));
     });
   });
 
   describe("GET /api/users", () => {
     it("should get all users", (done) => {
-      chai
-        .request(app)
+      request(app)
         .get("/api/users")
-        .end((err, res) => {
-          expect(res).to.have.status(200);
+        .then((res) => {
+          expect(res.status).to.equal(200);
           expect(res.body).to.be.an("array");
           expect(res.body.length).to.be.at.least(1);
           done();
-        });
+        })
+        .catch((err) => done(err));
     });
   });
 });
