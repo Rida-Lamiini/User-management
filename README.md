@@ -31,7 +31,7 @@ It provides essential user CRUD operations and authentication.
 
 ### 💾 Database _(Assumed)_
 
-- MongoDB (or any other database supported by the API)
+- Mysql
 
 ---
 
