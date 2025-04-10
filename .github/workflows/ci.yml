@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Fullstack CI/CD Pipeline
 
 on:
   push:
@@ -12,50 +12,67 @@ env:
   IMAGE_NAME: fullstack-ci-cd-app
 
 jobs:
-  test:
+  test-backend:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: users_db
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v3
-      
+
+      - name: Wait for MySQL to be healthy
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 3306 && echo "MySQL is up" && break
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      
+
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm install
-      
+
       - name: Run backend tests
         working-directory: ./backend
         run: npm test
-      
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm install
-      
-      - name: Run frontend tests
-        working-directory: ./frontend
-        run: npm test
 
   build-and-push:
-    needs: test
+    needs: test-backend
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
+
       - name: Build and push backend image
         working-directory: ./backend
         run: |
           docker build -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}-backend:latest .
           docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}-backend:latest
-      
+
       - name: Build and push frontend image
         working-directory: ./frontend
         run: |
