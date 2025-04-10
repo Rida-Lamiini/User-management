@@ -12,7 +12,14 @@ env:
   IMAGE_NAME: fullstack-ci-cd-app
 
 jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder backend test
+        run: echo "✅ Skipping backend tests for now..."
+
   build-and-push:
+    needs: test-backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
